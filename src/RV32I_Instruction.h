@@ -54,7 +54,7 @@ typedef enum {
     B_TYPE,
     U_TYPE,
     J_TYPE
-} InstructionFormat;
+} Instruction32Format;
 
 static std::unordered_map<std::string, RV32I_Instruction>
 const rv32i_string_to_enum_conversion_map = {
@@ -99,6 +99,6 @@ const rv32i_string_to_enum_conversion_map = {
 
 RV32I_Instruction get_instruction_type(std::string instruction_text);
 
-InstructionFormat get_instruction_format(const RV32I_Instruction &instruction);
+Instruction32Format get_instruction_format(const RV32I_Instruction &instruction);
 
 #endif //RISCV_SIMULATOR_RV32I_INSTRUCTION_H

@@ -28,5 +28,4 @@ public:
     Instruction32(std::string instruction_text);
 };
 
-
 #endif //RISCV_SIMULATOR_INSTRUCTION32_H

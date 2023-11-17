@@ -20,7 +20,7 @@ RV32I_Instruction get_instruction_type(std::string instruction_text) {
     return rv32i_string_to_enum_conversion_map.at(instruction_text);
 }
 
-InstructionFormat get_instruction_format(const RV32I_Instruction &instruction) {
+Instruction32Format get_instruction_format(const RV32I_Instruction &instruction) {
     switch (instruction) {
         case LUI:
         case AUIPC:
