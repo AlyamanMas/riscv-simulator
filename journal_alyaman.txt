@@ -1,0 +1,5 @@
+This is the journal file for Alyaman Massarani, ID: 900225917
+
+Nov 13, 13:22: Added RV32I_Instruction.h file with enum inside it
+Nov 13, 13:50: Created get_instruction_type function in RV32I_Instruction.h
+Nov 13, 16:58: Created Instruction32.h file with Instruction32 class inside it, mostly implemented the constructor
