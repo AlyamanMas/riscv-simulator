@@ -9,11 +9,11 @@
 #include <string>
 #include <variant>
 
-#include "./RV32I_Instruction.h"
+#include "RV32I_Instruction.h"
+#include "Register.h"
 
 class Instruction32 {
 public:
-    typedef uint8_t RegIndex_t;
     typedef uint16_t Immediate_t;
     typedef std::string UnresolvedLabel_t;
     typedef enum {
