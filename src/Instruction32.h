@@ -8,6 +8,8 @@
 #include <cstdint>
 #include <string>
 #include <variant>
+#include <stdexcept>
+#include <optional>
 
 #include "RV32I_Instruction.h"
 #include "Register.h"
@@ -16,16 +18,16 @@ class Instruction32 {
 public:
     typedef uint16_t Immediate_t;
     typedef std::string UnresolvedLabel_t;
-    typedef enum {
-        RegIndex,
-        Immediate,
-        UnresolvedLabel,
-    } OperandType;
+    typedef std::variant<RegIndex_t, Immediate_t, UnresolvedLabel_t> Operand_t;
+    typedef struct {
+        std::optional<std::logic_error> error;
+        bool is_warning;
+    } ParsingException_t;
 
     RV32I_Instruction type;
-    std::variant<RegIndex_t, Immediate_t, UnresolvedLabel_t> operands[3];
+    Operand_t operands[3];
 
-    Instruction32(std::string instruction_text);
+    Instruction32(const std::string &instruction_text, ParsingException_t &exception, std::optional<UnresolvedLabel_t>& unresolved_label);
 };
 
 #endif //RISCV_SIMULATOR_INSTRUCTION32_H
