@@ -26,7 +26,6 @@ Instruction32Format get_instruction_format(const RV32I_Instruction &instruction)
         case AUIPC:
             return U_TYPE;
         case JAL:
-        case JALR:
             return J_TYPE;
         case BEQ:
         case BNE:
@@ -49,6 +48,7 @@ Instruction32Format get_instruction_format(const RV32I_Instruction &instruction)
         case SLLI:
         case SRLI:
         case SRAI:
+        case JALR:
             return I_TYPE;
         case SB:
         case SH:
