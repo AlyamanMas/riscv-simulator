@@ -7,11 +7,11 @@
 #include <algorithm>
 #include <vector>
 #include <optional>
+#include <functional>
 
 #include "RV32I_Instruction.h"
 
 using namespace std;
-
 
 namespace parsing {
     // note reg_text must not have a leading or trailing comma or space,
@@ -33,7 +33,8 @@ namespace parsing {
         return nullopt;
     }
 
-    optional<Instruction32::Immediate_t> parse_immediate(const string &imm_text, bool &gte_modulo, int modulo = 0x1000) {
+    optional<Instruction32::Immediate_t>
+    parse_immediate(const string &imm_text, bool &gte_modulo, int modulo = 0x1000) {
         gte_modulo = false;
         if (imm_text.at(0) == '0' && imm_text.at(1) == 'x') { // hex
             auto imm = stoi(imm_text, nullptr, 16);
@@ -239,7 +240,47 @@ namespace parsing {
     }
 }
 
-Instruction32::Instruction32(const string &instruction_text, ParsingException_t &exception, optional<UnresolvedLabel_t>& unresolved_label) {
+namespace exec_fns {
+#define EXEC_FN(name) void name (Instruction32 &instruction, function<void(RegIndex_t, RegValue_t)> &set_reg, function<RegValue_t(RegIndex_t)> &get_reg, Memory &memory, RegValue_t &pc)
+#define READ_REG_INDX(index) get_reg(get<RegIndex_t>(instruction.operands[index]))
+#define READ_IMM(index) get<Instruction32::Immediate_t>(instruction.operands[index])
+
+    EXEC_FN(lui) {
+        set_reg(READ_REG_INDX(0), READ_IMM(1) << 12);
+    }
+
+    EXEC_FN(auipc) {
+        set_reg(READ_REG_INDX(0), (READ_IMM(1) << 12) + pc);
+    }
+
+    EXEC_FN(jal) {
+        set_reg(READ_REG_INDX(0), pc + 4);
+        pc += READ_IMM(1);
+    }
+
+    EXEC_FN(jalr) {
+        set_reg(READ_REG_INDX(0), pc + 4);
+        pc = (READ_IMM(1) + READ_REG_INDX(1)) & 0xFFFFFFFE;
+    }
+
+    EXEC_FN(beq) {
+        if (READ_REG_INDX(0) == READ_REG_INDX(1)) {
+            pc += READ_IMM(2);
+        } else {
+            pc += 4;
+        }
+    }
+
+    // declare a static constant array of function pointers
+    // to the execution functions for each instruction
+    static const array<function<void(Instruction32 &, function<void(RegIndex_t, RegValue_t)>&, function<RegValue_t(RegIndex_t)>&, Memory &, RegValue_t &)>, 37>
+            exec_fns = {
+    };
+
+}
+
+Instruction32::Instruction32(const string &instruction_text, ParsingException_t &exception,
+                             optional<UnresolvedLabel_t> &unresolved_label) {
     // Replace any tab or new line with a space, makes parsing easier
     string inst_text_clone = instruction_text;
     std::for_each(inst_text_clone.begin(), inst_text_clone.end(), [&](auto &item) {
@@ -292,4 +333,9 @@ Instruction32::Instruction32(const string &instruction_text, ParsingException_t 
     }
 
     parsing::parse_operands(*this, words, has_label, exception, instruction_text);
+}
+
+void Instruction32::execute(function<void(RegIndex_t, RegValue_t)> &set_reg, function<RegValue_t(RegIndex_t)> &get_reg,
+                            Memory &memory, RegValue_t &pc) {
+    exec_fns::exec_fns[this->type](*this, set_reg, get_reg, memory, pc);
 }

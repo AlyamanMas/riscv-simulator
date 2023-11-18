@@ -6,6 +6,7 @@
 #define RISCV_SIMULATOR_ASSEMBLYPROGRAM_H
 
 #include <variant>
+#include <array>
 
 #include "Register.h"
 #include "Memory.h"
@@ -21,6 +22,10 @@ class AssemblyProgram {
     int top_instruction_index;
 public:
     AssemblyProgram(std::string program_text);
+
+    void set_register(RegIndex_t index, RegValue_t value);
+
+    RegValue_t get_register(RegIndex_t index) const;
 
     void run();
 };

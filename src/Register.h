@@ -11,7 +11,7 @@
 
 typedef uint8_t RegIndex_t;
 typedef uint32_t RegValue_t;
-typedef RegValue_t RegisterFile_t[32];
+typedef std::array<RegValue_t, 32> RegisterFile_t;
 
 static std::unordered_map<std::string, RegIndex_t> const register_convention_map = {
         {"zero", 0},

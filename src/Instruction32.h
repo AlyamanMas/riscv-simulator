@@ -10,9 +10,11 @@
 #include <variant>
 #include <stdexcept>
 #include <optional>
+#include <functional>
 
 #include "RV32I_Instruction.h"
 #include "Register.h"
+#include "Memory.h"
 
 class Instruction32 {
 public:
@@ -28,6 +30,11 @@ public:
     Operand_t operands[3];
 
     Instruction32(const std::string &instruction_text, ParsingException_t &exception, std::optional<UnresolvedLabel_t>& unresolved_label);
+
+    void execute(
+            std::function<void(RegIndex_t, RegValue_t)>& set_reg,
+            std::function<RegValue_t(RegIndex_t)>& get_reg,
+            Memory &memory, RegValue_t &pc);
 };
 
 #endif //RISCV_SIMULATOR_INSTRUCTION32_H
