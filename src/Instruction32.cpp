@@ -265,88 +265,88 @@ namespace exec_fns {
 
     EXEC_FN(JAL) {
         set_reg(RD_INDX, pc + 4);
-        pc += (int32_t)IMM1;
+        pc += (int32_t) IMM1;
     }
 
     EXEC_FN(JALR) {
         set_reg(RD_INDX, pc + 4);
-        pc = ((int32_t)IMM1 + READ_REG(2)) & 0xFFFFFFFE;
+        pc = ((int32_t) IMM1 + READ_REG(2)) & 0xFFFFFFFE;
     }
 
     EXEC_FN(BEQ) {
         if (READ_REG(0) == READ_REG(1)) {
-            pc += (int32_t)IMM2;
+            pc += (int32_t) IMM2;
         }
     }
 
     EXEC_FN(BNE) {
         if (READ_REG(0) != READ_REG(1)) {
-            pc += (int32_t)IMM2;
+            pc += (int32_t) IMM2;
         }
     }
 
     EXEC_FN(BLT) {
-        if ((int32_t)READ_REG(0) < (int32_t)READ_REG(1)) {
-            pc += (int32_t)IMM2;
+        if ((int32_t) READ_REG(0) < (int32_t) READ_REG(1)) {
+            pc += (int32_t) IMM2;
         }
     }
 
     EXEC_FN(BGE) {
-        if ((int32_t)READ_REG(0) >= (int32_t)READ_REG(1)) {
-            pc += (int32_t)IMM2;
+        if ((int32_t) READ_REG(0) >= (int32_t) READ_REG(1)) {
+            pc += (int32_t) IMM2;
         }
     }
 
     EXEC_FN(BLTU) {
         if (READ_REG(0) < READ_REG(1)) {
-            pc += (int32_t)IMM2;
+            pc += (int32_t) IMM2;
         }
     }
 
     EXEC_FN(BGEU) {
         if (READ_REG(0) >= READ_REG(1)) {
-            pc += (int32_t)IMM2;
+            pc += (int32_t) IMM2;
         }
     }
 
     EXEC_FN(LB) {
-        set_reg(RD_INDX, (int32_t)memory.get_byte(READ_REG(1) + (int32_t)IMM1));
+        set_reg(RD_INDX, (int32_t) memory.get_byte(READ_REG(1) + (int32_t) IMM1));
     }
 
     EXEC_FN(LH) {
-        set_reg(RD_INDX, (int32_t)memory.get_half_word(READ_REG(1) + (int32_t)IMM1));
+        set_reg(RD_INDX, (int32_t) memory.get_half_word(READ_REG(1) + (int32_t) IMM1));
     }
 
     EXEC_FN(LW) {
-        set_reg(RD_INDX, memory.get_word(READ_REG(1) + (int32_t)IMM1));
+        set_reg(RD_INDX, memory.get_word(READ_REG(1) + (int32_t) IMM1));
     }
 
     EXEC_FN(LBU) {
-        set_reg(RD_INDX, memory.get_byte(READ_REG(1) + (int32_t)IMM1));
+        set_reg(RD_INDX, memory.get_byte(READ_REG(1) + (int32_t) IMM1));
     }
 
     EXEC_FN(LHU) {
-        set_reg(RD_INDX, memory.get_half_word(READ_REG(1) + (int32_t)IMM1));
+        set_reg(RD_INDX, memory.get_half_word(READ_REG(1) + (int32_t) IMM1));
     }
 
     EXEC_FN(SB) {
-        memory.set_byte(READ_REG(2) + (int32_t)IMM1, (uint8_t)READ_REG(0));
+        memory.set_byte(READ_REG(2) + (int32_t) IMM1, (uint8_t) READ_REG(0));
     }
 
     EXEC_FN(SH) {
-        memory.set_half_word(READ_REG(2) + (int32_t)IMM1, (uint16_t)READ_REG(0));
+        memory.set_half_word(READ_REG(2) + (int32_t) IMM1, (uint16_t) READ_REG(0));
     }
 
     EXEC_FN(SW) {
-        memory.set_word(READ_REG(2) + (int32_t)IMM1, READ_REG(0));
+        memory.set_word(READ_REG(2) + (int32_t) IMM1, READ_REG(0));
     }
 
     EXEC_FN(ADDI) {
-        set_reg(RD_INDX, (int32_t)READ_REG(1) + (int32_t)IMM2);
+        set_reg(RD_INDX, (int32_t) READ_REG(1) + (int32_t) IMM2);
     }
 
     EXEC_FN(SLTI) {
-        set_reg(RD_INDX, (int32_t)READ_REG(1) < (int32_t)IMM2);
+        set_reg(RD_INDX, (int32_t) READ_REG(1) < (int32_t) IMM2);
     }
 
     EXEC_FN(SLTIU) {
@@ -374,15 +374,15 @@ namespace exec_fns {
     }
 
     EXEC_FN(SRAI) {
-        set_reg(RD_INDX, (int32_t)READ_REG(1) >> IMM2);
+        set_reg(RD_INDX, (int32_t) READ_REG(1) >> IMM2);
     }
 
     EXEC_FN(ADD) {
-        set_reg(RD_INDX, (int32_t)READ_REG(1) + (int32_t)READ_REG(2));
+        set_reg(RD_INDX, (int32_t) READ_REG(1) + (int32_t) READ_REG(2));
     }
 
     EXEC_FN(SUB) {
-        set_reg(RD_INDX, (int32_t)READ_REG(1) - (int32_t)READ_REG(2));
+        set_reg(RD_INDX, (int32_t) READ_REG(1) - (int32_t) READ_REG(2));
     }
 
     EXEC_FN(SLL) {
@@ -390,7 +390,7 @@ namespace exec_fns {
     }
 
     EXEC_FN(SLT) {
-        set_reg(RD_INDX, (int32_t)READ_REG(1) < (int32_t)READ_REG(2));
+        set_reg(RD_INDX, (int32_t) READ_REG(1) < (int32_t) READ_REG(2));
     }
 
     EXEC_FN(SLTU) {
@@ -406,7 +406,7 @@ namespace exec_fns {
     }
 
     EXEC_FN(SRA) {
-        set_reg(RD_INDX, (int32_t)READ_REG(1) >> (READ_REG(2) & 0x1F));
+        set_reg(RD_INDX, (int32_t) READ_REG(1) >> (READ_REG(2) & 0x1F));
     }
 
     EXEC_FN(OR) {
@@ -496,7 +496,45 @@ void Instruction32::execute(function<void(RegIndex_t, RegValue_t)> &set_reg, fun
                           "\" has an unresolved label: " + get<UnresolvedLabel_t>(this->operands[2]));
     }
 
+#define EXEC_CASE(name) case name: exec_fns::name(*this, set_reg, get_reg, memory, pc); break;
     switch (this->type) {
-
+        EXEC_CASE(LUI)
+        EXEC_CASE(AUIPC)
+        EXEC_CASE(JAL)
+        EXEC_CASE(JALR)
+        EXEC_CASE(BEQ)
+        EXEC_CASE(BNE)
+        EXEC_CASE(BLT)
+        EXEC_CASE(BGE)
+        EXEC_CASE(BLTU)
+        EXEC_CASE(BGEU)
+        EXEC_CASE(LB)
+        EXEC_CASE(LH)
+        EXEC_CASE(LW)
+        EXEC_CASE(LBU)
+        EXEC_CASE(LHU)
+        EXEC_CASE(SB)
+        EXEC_CASE(SH)
+        EXEC_CASE(SW)
+        EXEC_CASE(ADDI)
+        EXEC_CASE(SLTI)
+        EXEC_CASE(SLTIU)
+        EXEC_CASE(XORI)
+        EXEC_CASE(ORI)
+        EXEC_CASE(ANDI)
+        EXEC_CASE(SLLI)
+        EXEC_CASE(SRLI)
+        EXEC_CASE(SRAI)
+        EXEC_CASE(ADD)
+        EXEC_CASE(SUB)
+        EXEC_CASE(SLL)
+        EXEC_CASE(SLT)
+        EXEC_CASE(SLTU)
+        EXEC_CASE(XOR)
+        EXEC_CASE(SRL)
+        EXEC_CASE(SRA)
+        EXEC_CASE(OR)
+        EXEC_CASE(AND)
     }
+#undef EXEC_CASE
 }
