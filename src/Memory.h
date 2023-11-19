@@ -9,6 +9,8 @@
 #include <cstdint>
 #include <string>
 #include <variant>
+#include <optional>
+#include <vector>
 
 class Memory {
 public:
@@ -34,13 +36,25 @@ public:
     const std::map<Address_t, uint8_t> &get_const_reference() { return memory_map; };
 
 private:
-    typedef std::tuple<Address_t, std::variant<uint32_t, uint16_t, uint8_t, std::string>> MemoryOperation_t;
+    // Memory operation is a pair of address and data
+    // if the address isn't specified, we assume it's the next available address
+    typedef struct {
+        std::optional<Address_t> address;
+        std::variant<
+                std::vector<uint32_t>,
+                std::vector<uint16_t>,
+                std::vector<uint8_t>,
+                std::vector<std::string>
+        > data;
+    } MemoryOperation_t;
 
     std::map<Address_t, uint8_t> memory_map;
 
-    MemoryOperation_t deserialize_memory_operation(std::string memory_operation_text);
+    MemoryOperation_t deserialize_memory_operation(std::string memory_op_str);
 
-    void execute_memory_operation(MemoryOperation_t memory_operation);
+    void execute_memory_operation(const MemoryOperation_t &memory_operation);
+
+    void execute_memory_string(const std::vector<std::string>& operations_str);
 };
 
 
