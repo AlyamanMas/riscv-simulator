@@ -14,6 +14,8 @@
 
 class Memory {
 public:
+    typedef uint32_t Address_t;
+
     // Memory operation is a pair of address and data
     // if the address isn't specified, we assume it's the next available address
     typedef struct {
@@ -25,8 +27,6 @@ public:
                 std::vector<std::string>
         > data;
     } MemoryOperation_t;
-
-    typedef uint32_t Address_t;
 
     Memory() = default;
 
