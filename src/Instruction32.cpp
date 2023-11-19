@@ -60,30 +60,30 @@ namespace parsing {
 
     optional<tuple<Instruction32::Immediate_t, RegIndex_t>> parse_immediate_with_offset(
             const string &imm_text,
-            Instruction32::ParsingException_t &exception
+            Instruction32::ParsingException_t &error
     ) {
         if (imm_text.find('(') == string::npos || imm_text.find(')') == string::npos) {
-            exception = {
-                    logic_error("The instruction \""s + imm_text +
-                                "\" has an invalid immediate value: " + imm_text),
+            error = {
+                    "The instruction \""s + imm_text +
+                    "\" has an invalid immediate value: " + imm_text,
                     false
             };
             return nullopt;
         }
-        auto imm = parse_immediate(imm_text.substr(0, imm_text.find('(')), exception.is_warning);
+        auto imm = parse_immediate(imm_text.substr(0, imm_text.find('(')), error.is_warning);
         if (!imm.has_value()) {
-            exception = {
-                    logic_error("The instruction \""s + imm_text +
-                                "\" has an invalid immediate value: " + imm_text),
+            error = {
+                    "The instruction \""s + imm_text +
+                    "\" has an invalid immediate value: " + imm_text,
                     false
             };
             return nullopt;
         }
         auto reg_index = parse_regindex(imm_text.substr(imm_text.find('(') + 1, imm_text.find(')') - 1));
         if (!reg_index.has_value()) {
-            exception = {
-                    logic_error("The instruction \""s + imm_text +
-                                "\" has an invalid register name: " + imm_text),
+            error = {
+                    "The instruction \""s + imm_text +
+                    "\" has an invalid register name: " + imm_text,
                     false
             };
             return nullopt;
@@ -95,7 +95,7 @@ namespace parsing {
             Instruction32 &instruction,
             vector<string> &words,
             bool has_label,
-            Instruction32::ParsingException_t &exception,
+            Instruction32::ParsingException_t &error,
             const string &instruction_text
     ) {
         switch (get_instruction_format(instruction.type)) {
@@ -104,9 +104,9 @@ namespace parsing {
                     auto reg_index =
                             parse_regindex(words.at(has_label + i + 1));
                     if (!reg_index.has_value()) {
-                        exception = {
-                                logic_error("The instruction \""s + instruction_text +
-                                            "\" has an invalid register name: " + words.at(has_label + i + 1)),
+                        error = {
+                                "The instruction \""s + instruction_text +
+                                "\" has an invalid register name: " + words.at(has_label + i + 1),
                                 false
                         };
                         return;
@@ -120,9 +120,9 @@ namespace parsing {
                     auto reg_index =
                             parse_regindex(words.at(has_label + i + 1));
                     if (!reg_index.has_value()) {
-                        exception = {
-                                logic_error("The instruction \""s + instruction_text +
-                                            "\" has an invalid register name: " + words.at(has_label + i + 1)),
+                        error = {
+                                "The instruction \""s + instruction_text +
+                                "\" has an invalid register name: " + words.at(has_label + i + 1),
                                 false
                         };
                         return;
@@ -133,17 +133,17 @@ namespace parsing {
                 auto imm =
                         parse_immediate(words.at(has_label + 3), greater_than_12_bits);
                 if (!imm.has_value()) {
-                    exception = {
-                            logic_error("The instruction \""s + instruction_text +
-                                        "\" has an invalid immediate value: " + words.at(has_label + 3)),
+                    error = {
+                            "The instruction \""s + instruction_text +
+                            "\" has an invalid immediate value: " + words.at(has_label + 3),
                             false
                     };
                     return;
                 }
                 if (greater_than_12_bits) {
-                    exception = {
-                            logic_error("The instruction \""s + instruction_text +
-                                        "\" has an immediate value greater than 12 bits: " + words.at(has_label + 3)),
+                    error = {
+                            "The instruction \""s + instruction_text +
+                            "\" has an immediate value greater than 12 bits: " + words.at(has_label + 3),
                             true
                     };
                 }
@@ -154,16 +154,16 @@ namespace parsing {
                 auto reg_index =
                         parse_regindex(words.at(has_label + 1));
                 if (!reg_index.has_value()) {
-                    exception = {
-                            logic_error("The instruction \""s + instruction_text +
-                                        "\" has an invalid register name: " + words.at(has_label + 1)),
+                    error = {
+                            "The instruction \""s + instruction_text +
+                            "\" has an invalid register name: " + words.at(has_label + 1),
                             false
                     };
                     return;
                 }
                 instruction.operands[0] = reg_index.value();
                 auto imm_with_offset =
-                        parse_immediate_with_offset(words.at(has_label + 2), exception);
+                        parse_immediate_with_offset(words.at(has_label + 2), error);
                 if (!imm_with_offset.has_value()) {
                     return;
                 }
@@ -176,9 +176,9 @@ namespace parsing {
                     auto reg_index =
                             parse_regindex(words.at(has_label + i + 1));
                     if (!reg_index.has_value()) {
-                        exception = {
-                                logic_error("The instruction \""s + instruction_text +
-                                            "\" has an invalid register name: " + words.at(has_label + i + 1)),
+                        error = {
+                                "The instruction \""s + instruction_text +
+                                "\" has an invalid register name: " + words.at(has_label + i + 1),
                                 false
                         };
                         return;
@@ -192,9 +192,9 @@ namespace parsing {
                 auto reg_index =
                         parse_regindex(words.at(has_label + 1));
                 if (!reg_index.has_value()) {
-                    exception = {
-                            logic_error("The instruction \""s + instruction_text +
-                                        "\" has an invalid register name: " + words.at(has_label + 1)),
+                    error = {
+                            "The instruction \""s + instruction_text +
+                            "\" has an invalid register name: " + words.at(has_label + 1),
                             false
                     };
                     return;
@@ -204,17 +204,17 @@ namespace parsing {
                 auto imm =
                         parse_immediate(words.at(has_label + 2), greater_than_20_bits, 0x100000);
                 if (!imm.has_value()) {
-                    exception = {
-                            logic_error("The instruction \""s + instruction_text +
-                                        "\" has an invalid immediate value: " + words.at(has_label + 2)),
+                    error = {
+                            "The instruction \""s + instruction_text +
+                            "\" has an invalid immediate value: " + words.at(has_label + 2),
                             false
                     };
                     return;
                 }
                 if (greater_than_20_bits) {
-                    exception = {
-                            logic_error("The instruction \""s + instruction_text +
-                                        "\" has an immediate value greater than 20 bits: " + words.at(has_label + 2)),
+                    error = {
+                            "The instruction \""s + instruction_text +
+                            "\" has an immediate value greater than 20 bits: " + words.at(has_label + 2),
                             true
                     };
                 }
@@ -225,9 +225,9 @@ namespace parsing {
                 auto reg_index =
                         parse_regindex(words.at(has_label + 1));
                 if (!reg_index.has_value()) {
-                    exception = {
-                            logic_error("The instruction \""s + instruction_text +
-                                        "\" has an invalid register name: " + words.at(has_label + 1)),
+                    error = {
+                            "The instruction \""s + instruction_text +
+                            "\" has an invalid register name: " + words.at(has_label + 1),
                             false
                     };
                     return;
@@ -430,10 +430,11 @@ namespace exec_fns {
 #undef IMM2
 }
 
-Instruction32::Instruction32(const string &instruction_text, ParsingException_t &exception,
+Instruction32::Instruction32(const string &instruction_text, ParsingException_t &error,
                              optional<UnresolvedLabel_t> &unresolved_label)
         : instruction_text(instruction_text) {
     // Replace any tab or new line with a space, makes parsing easier
+    error = {nullopt, false};
     string inst_text_clone = instruction_text;
     std::for_each(inst_text_clone.begin(), inst_text_clone.end(), [&](auto &item) {
         if (item == '\t' || item == '\n') {
@@ -455,9 +456,9 @@ Instruction32::Instruction32(const string &instruction_text, ParsingException_t 
 
     // Remove empty words and commas
     for (int i = 0; i < words.size(); ++i) {
-        if (words.at(i).empty() || words.at(i) == ",") {
+        bool word_empty = words.at(i).empty();
+        if (word_empty || words.at(i) == ",") {
             words.erase(words.begin() + i);
-            --i;
         }
         // remove a comma at the end of a word
         if (words.at(i).at(words.at(i).size() - 1) == ',') {
@@ -466,6 +467,9 @@ Instruction32::Instruction32(const string &instruction_text, ParsingException_t 
         // remove a comma at the start of a word
         if (words.at(i).at(0) == ',') {
             words.at(i) = words.at(i).substr(1);
+        }
+        if (word_empty) {
+            i--;
         }
     }
 
@@ -478,13 +482,29 @@ Instruction32::Instruction32(const string &instruction_text, ParsingException_t 
 
     // If the first word in the line contains a colon, then it is a label,
     // so we take the second word as the instruction type. Otherwise we take the first
-    if (!has_label) {
-        this->type = get_instruction_type(words.at(0));
-    } else {
-        this->type = get_instruction_type(words.at(1));
+    if (words.size() < 3 + has_label) {
+        if (has_label && words.size() == 1)
+            error = {
+                    "The instruction \""s + instruction_text + "\" only has a label",
+                    true
+            };
+        else
+            error = {
+                    "The instruction \""s + instruction_text + "\" has too few operands",
+                    true
+            };
+        return;
     }
 
-    parsing::parse_operands(*this, words, has_label, exception, instruction_text);
+    optional<std::string> ex;
+    if (auto x = get_instruction_type(words.at(0 + has_label), ex)) {
+        this->type = x.value();
+    } else {
+        error = {ex.value(), false};
+        return;
+    }
+
+    parsing::parse_operands(*this, words, has_label, error, instruction_text);
 }
 
 void Instruction32::execute(function<void(RegIndex_t, RegValue_t)> &set_reg, function<RegValue_t(RegIndex_t)> &get_reg,

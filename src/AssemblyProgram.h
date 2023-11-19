@@ -15,13 +15,19 @@
 typedef std::string Label_t;
 
 class AssemblyProgram {
+    typedef struct {
+        uint32_t address;
+        Instruction32 instruction;
+    } InstructionWithAddress;
+
     RegisterFile_t register_file;
     RegValue_t pc;
     Memory memory;
-    std::vector<std::variant<Label_t, Instruction32>> instructions;
-    int top_instruction_index;
+    std::vector<InstructionWithAddress> instructions;
+    std::map<Label_t, uint32_t> label_map;
+    int top_instruction_address;
 public:
-    AssemblyProgram(std::string program_text);
+    AssemblyProgram(std::string program_text, uint32_t starting_address = 0);
 
     void set_register(RegIndex_t index, RegValue_t value);
 

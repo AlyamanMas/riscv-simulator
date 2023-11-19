@@ -6,6 +6,9 @@
 #define RISCV_SIMULATOR_RV32I_INSTRUCTION_H
 
 #include <unordered_map>
+#include <string>
+#include <optional>
+
 
 typedef enum {
     LUI,
@@ -97,7 +100,7 @@ const rv32i_string_to_enum_conversion_map = {
         {"AND",   AND}
 };
 
-RV32I_Instruction get_instruction_type(std::string instruction_text);
+std::optional<RV32I_Instruction> get_instruction_type(std::string instruction_text, std::optional<std::string> &exception);
 
 Instruction32Format get_instruction_format(const RV32I_Instruction &instruction);
 

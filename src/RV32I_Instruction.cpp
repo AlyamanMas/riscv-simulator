@@ -1,23 +1,34 @@
 //
 // Created by yaman on 13/11/23.
 //
+#include "RV32I_Instruction.h"
+
 #include <string>
 #include <algorithm>
 #include <cctype>
 #include <unordered_map>
-#include "RV32I_Instruction.h"
+#include <stdexcept>
 
 using namespace std;
 
 
-RV32I_Instruction get_instruction_type(std::string instruction_text) {
+optional<RV32I_Instruction> get_instruction_type(std::string instruction_text, optional<string> &exception) {
     transform(
             instruction_text.begin(),
             instruction_text.end(),
             instruction_text.begin(),
             ::toupper
     );
-    return rv32i_string_to_enum_conversion_map.at(instruction_text);
+    if (instruction_text.empty()) {
+        exception = "Empty instruction";
+        return nullopt;
+    }
+    if (!rv32i_string_to_enum_conversion_map.contains(instruction_text)) {
+        exception = "Invalid instruction: " + instruction_text;
+        return nullopt;
+    }
+    exception = nullopt;
+    return {rv32i_string_to_enum_conversion_map.at(instruction_text)};
 }
 
 Instruction32Format get_instruction_format(const RV32I_Instruction &instruction) {

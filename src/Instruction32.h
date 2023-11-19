@@ -22,7 +22,7 @@ public:
     typedef std::string UnresolvedLabel_t;
     typedef std::variant<RegIndex_t, Immediate_t, UnresolvedLabel_t> Operand_t;
     typedef struct {
-        std::optional<std::logic_error> error;
+        std::optional<std::string> error;
         bool is_warning;
     } ParsingException_t;
 
@@ -30,7 +30,13 @@ public:
     RV32I_Instruction type;
     Operand_t operands[3];
 
-    Instruction32(const std::string &instruction_text, ParsingException_t &exception, std::optional<UnresolvedLabel_t>& unresolved_label);
+    Instruction32() = default;
+
+    Instruction32(const Instruction32 &other) = default;
+
+    Instruction32(Instruction32 &&other) noexcept = default;
+
+    Instruction32(const std::string &instruction_text, ParsingException_t &error, std::optional<UnresolvedLabel_t>& unresolved_label);
 
     void execute(
             std::function<void(RegIndex_t, RegValue_t)>& set_reg,
