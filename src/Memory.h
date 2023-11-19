@@ -13,6 +13,19 @@
 #include <vector>
 
 class Memory {
+private:
+    // Memory operation is a pair of address and data
+    // if the address isn't specified, we assume it's the next available address
+    typedef struct {
+        std::optional<Address_t> address;
+        std::variant<
+                std::vector<uint32_t>,
+                std::vector<uint16_t>,
+                std::vector<uint8_t>,
+                std::vector<std::string>
+        > data;
+    } MemoryOperation_t;
+
 public:
     typedef uint32_t Address_t;
 
@@ -35,26 +48,14 @@ public:
 //    std::string serialize();
     const std::map<Address_t, uint8_t> &get_const_reference() { return memory_map; };
 
-private:
-    // Memory operation is a pair of address and data
-    // if the address isn't specified, we assume it's the next available address
-    typedef struct {
-        std::optional<Address_t> address;
-        std::variant<
-                std::vector<uint32_t>,
-                std::vector<uint16_t>,
-                std::vector<uint8_t>,
-                std::vector<std::string>
-        > data;
-    } MemoryOperation_t;
+    void execute_memory_operation(const MemoryOperation_t &memory_operation);
 
+    void execute_memory_string(const std::vector<std::string> &operations_str);
+
+private:
     std::map<Address_t, uint8_t> memory_map;
 
     MemoryOperation_t deserialize_memory_operation(std::string memory_op_str);
-
-    void execute_memory_operation(const MemoryOperation_t &memory_operation);
-
-    void execute_memory_string(const std::vector<std::string>& operations_str);
 };
 
 
