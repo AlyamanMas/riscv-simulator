@@ -15,11 +15,13 @@
 typedef std::string Label_t;
 
 class AssemblyProgram {
+public:
     typedef struct {
         uint32_t address;
         Instruction32 instruction;
     } InstructionWithAddress;
 
+private:
     RegisterFile_t register_file;
     RegValue_t pc;
     Memory memory;
@@ -30,12 +32,25 @@ class AssemblyProgram {
     bool reached_end_of_program;
 
     void resolve_labels();
+
 public:
     AssemblyProgram(std::string program_text, uint32_t starting_address = 0);
 
     void set_register(RegIndex_t index, RegValue_t value);
 
     RegValue_t get_register(RegIndex_t index) const;
+
+    std::array<RegValue_t, 32> get_registers() const { return register_file; };
+
+    const Memory &get_memory_const() const { return memory; };
+
+    Memory &get_memory() { return memory; };
+
+    uint32_t get_pc() const { return pc; }
+
+    const std::vector<InstructionWithAddress> &get_instructions_const() const { return instructions; }
+
+    bool has_reached_end_of_program() const { return reached_end_of_program; }
 
     bool execute_next_instruction();
 
