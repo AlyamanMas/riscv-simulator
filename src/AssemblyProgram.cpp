@@ -39,7 +39,8 @@ AssemblyProgram::AssemblyProgram(std::string program_text, uint32_t starting_add
         auto instruction = Instruction32(line, error, unresolved_label);
 
         if (error.error.value_or("").find("has too few operands"s) == string::npos
-            && error.error.value_or("").find("only has a label"s) == string::npos) {
+            && error.error.value_or("").find("only has a label"s) == string::npos
+            && error.error.value_or("").find("empty line"s) == string::npos) {
 
             instructions.push_back({current_address, instruction});
             current_address += 4;
@@ -75,5 +76,35 @@ void AssemblyProgram::resolve_labels() {
                 operand = immediate;
             }
         }
+    }
+
+    // to save some memory space, we can clear the label map now that we're done with it
+    // disabled for debugging purposes
+//    label_map.clear();
+}
+
+bool AssemblyProgram::execute_next_instruction() {
+    uint32_t old_pc = pc;
+    if (pc > instructions.back().address) {
+        reached_end_of_program = true;
+        return true;
+    }
+
+    auto instruction = instructions[pc / 4];
+    instruction.instruction.execute(
+            [this](RegIndex_t index, RegValue_t value) { this->set_register(index, value); },
+            [this](RegIndex_t index) { return this->get_register(index); },
+            memory, pc);
+
+    if (pc == old_pc) {
+        pc += 4;
+    }
+
+    return false;
+}
+
+void AssemblyProgram::run() {
+    while (!reached_end_of_program) {
+        execute_next_instruction();
     }
 }

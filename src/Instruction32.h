@@ -39,8 +39,8 @@ public:
     Instruction32(const std::string &instruction_text, ParsingException_t &error, std::optional<UnresolvedLabel_t>& unresolved_label);
 
     void execute(
-            std::function<void(RegIndex_t, RegValue_t)>& set_reg,
-            std::function<RegValue_t(RegIndex_t)>& get_reg,
+            const std::function<void(RegIndex_t, RegValue_t)>& set_reg,
+            const std::function<RegValue_t(RegIndex_t)>& get_reg,
             Memory &memory, RegValue_t &pc);
 };
 

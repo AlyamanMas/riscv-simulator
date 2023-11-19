@@ -26,6 +26,7 @@ class AssemblyProgram {
     std::vector<InstructionWithAddress> instructions;
     std::map<Label_t, uint32_t> label_map;
     int top_instruction_address;
+
     bool reached_end_of_program;
 
     void resolve_labels();
@@ -35,6 +36,8 @@ public:
     void set_register(RegIndex_t index, RegValue_t value);
 
     RegValue_t get_register(RegIndex_t index) const;
+
+    bool execute_next_instruction();
 
     void run();
 };

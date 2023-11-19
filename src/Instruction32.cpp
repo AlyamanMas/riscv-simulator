@@ -342,7 +342,7 @@ namespace parsing {
 }
 
 namespace exec_fns {
-#define EXEC_FN(name) void name (Instruction32 &instruction, function<void(RegIndex_t, RegValue_t)> &set_reg, function<RegValue_t(RegIndex_t)> &get_reg, Memory &memory, RegValue_t &pc)
+#define EXEC_FN(name) void name (Instruction32 &instruction, const function<void(RegIndex_t, RegValue_t)> &set_reg, const function<RegValue_t(RegIndex_t)> &get_reg, Memory &memory, RegValue_t &pc)
 #define READ_REG_INDX(index) get<RegIndex_t>(instruction.operands[index])
 #define READ_REG(index) get_reg(READ_REG_INDX(index))
 #define READ_IMM(index) get<Instruction32::Immediate_t>(instruction.operands[index])
@@ -366,47 +366,47 @@ namespace exec_fns {
 
     EXEC_FN(JAL) {
         set_reg(RD_INDX, pc + 4);
-        pc += (int32_t) IMM1;
+        pc += (int32_t) IMM1 * 2;
     }
 
     EXEC_FN(JALR) {
         set_reg(RD_INDX, pc + 4);
-        pc = ((int32_t) IMM1 + READ_REG(2)) & 0xFFFFFFFE;
+        pc = ((int32_t) IMM1 + READ_REG(2)) & ~1;
     }
 
     EXEC_FN(BEQ) {
         if (READ_REG(0) == READ_REG(1)) {
-            pc += (int32_t) IMM2;
+            pc += (int32_t) IMM2 * 2;
         }
     }
 
     EXEC_FN(BNE) {
         if (READ_REG(0) != READ_REG(1)) {
-            pc += (int32_t) IMM2;
+            pc += (int32_t) IMM2 * 2;
         }
     }
 
     EXEC_FN(BLT) {
         if ((int32_t) READ_REG(0) < (int32_t) READ_REG(1)) {
-            pc += (int32_t) IMM2;
+            pc += (int32_t) IMM2 * 2;
         }
     }
 
     EXEC_FN(BGE) {
         if ((int32_t) READ_REG(0) >= (int32_t) READ_REG(1)) {
-            pc += (int32_t) IMM2;
+            pc += (int32_t) IMM2 * 2;
         }
     }
 
     EXEC_FN(BLTU) {
         if (READ_REG(0) < READ_REG(1)) {
-            pc += (int32_t) IMM2;
+            pc += (int32_t) IMM2 * 2;
         }
     }
 
     EXEC_FN(BGEU) {
         if (READ_REG(0) >= READ_REG(1)) {
-            pc += (int32_t) IMM2;
+            pc += (int32_t) IMM2 * 2;
         }
     }
 
@@ -543,6 +543,18 @@ Instruction32::Instruction32(const string &instruction_text, ParsingException_t 
         }
     });
 
+    // remove everything after comment #
+    if (inst_text_clone.find('#') != string::npos) {
+        inst_text_clone = inst_text_clone.substr(0, inst_text_clone.find('#'));
+        if (inst_text_clone.empty() || inst_text_clone == " ") {
+            error = {
+                    "empty line",
+                    true
+            };
+            return;
+        }
+    }
+
     // Split string by space
     vector<string> words;
     int pos = 0;
@@ -561,14 +573,6 @@ Instruction32::Instruction32(const string &instruction_text, ParsingException_t 
         if (word_empty || words.at(i) == ",") {
             words.erase(words.begin() + i);
         }
-        // remove a comma at the end of a word
-//        if (words.size() >= 5 && words.at(i).at(words.at(i).size() - 1) == ',') {
-//            words.at(i) = words.at(i).substr(0, words.at(i).size() - 1);
-//        }
-//        // remove a comma at the start of a word
-//        if (words.at(i).at(0) == ',') {
-//            words.at(i) = words.at(i).substr(1);
-//        }
         if (word_empty) {
             i--;
         }
@@ -608,7 +612,7 @@ Instruction32::Instruction32(const string &instruction_text, ParsingException_t 
     parsing::parse_operands(*this, words, has_label, error, instruction_text);
 }
 
-void Instruction32::execute(function<void(RegIndex_t, RegValue_t)> &set_reg, function<RegValue_t(RegIndex_t)> &get_reg,
+void Instruction32::execute(const function<void(RegIndex_t, RegValue_t)> &set_reg, const function<RegValue_t(RegIndex_t)> &get_reg,
                             Memory &memory, RegValue_t &pc) {
 
     // If we still have an unresolved label, we can't work with it

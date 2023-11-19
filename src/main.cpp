@@ -19,5 +19,6 @@ int main() {
     auto test_file = project_dir / "riscv1.asm";
 
     auto my_program = AssemblyProgram(read_file(test_file));
+    my_program.run();
     return 0;
 }

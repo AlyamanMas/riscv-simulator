@@ -9,4 +9,4 @@ for_loop:
 	addi	x12, x12, 1			# i++
 	beq	zero, zero, for_loop		# continue
 .exit_for_loop:
-	jalr	zero, 0(ra)
+	#jalr	zero, 0(ra)
