@@ -13,7 +13,7 @@
 #include <vector>
 
 class Memory {
-private:
+public:
     // Memory operation is a pair of address and data
     // if the address isn't specified, we assume it's the next available address
     typedef struct {
@@ -26,7 +26,6 @@ private:
         > data;
     } MemoryOperation_t;
 
-public:
     typedef uint32_t Address_t;
 
     Memory() = default;
@@ -52,10 +51,10 @@ public:
 
     void execute_memory_string(const std::vector<std::string> &operations_str);
 
+    MemoryOperation_t deserialize_memory_operation(std::string memory_op_str);
+
 private:
     std::map<Address_t, uint8_t> memory_map;
-
-    MemoryOperation_t deserialize_memory_operation(std::string memory_op_str);
 };
 
 
