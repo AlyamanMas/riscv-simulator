@@ -38,9 +38,12 @@ AssemblyProgram::AssemblyProgram(std::string program_text, uint32_t starting_add
         std::optional<Instruction32::UnresolvedLabel_t> unresolved_label;
         auto instruction = Instruction32(line, error, unresolved_label);
 
-        if (error.error.has_value() &&
-            error.error.value().find("has too few operands") == string::npos)
+        if (error.error.value_or("").find("has too few operands"s) == string::npos
+            && error.error.value_or("").find("only has a label"s) == string::npos) {
+
             instructions.push_back({current_address, instruction});
+            current_address += 4;
+        }
         if (unresolved_label.has_value()) {
             label_map[unresolved_label.value()] = current_address;
         }
@@ -53,6 +56,5 @@ AssemblyProgram::AssemblyProgram(std::string program_text, uint32_t starting_add
                 cerr << "Warning: " << error.error.value() << endl;
         }
 
-        current_address += 4;
     }
 }

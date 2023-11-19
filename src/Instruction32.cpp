@@ -36,13 +36,13 @@ namespace parsing {
     optional<Instruction32::Immediate_t>
     parse_immediate(const string &imm_text, bool &gte_modulo, int modulo = 0x1000) {
         gte_modulo = false;
-        if (imm_text.at(0) == '0' && imm_text.at(1) == 'x') { // hex
+        if (imm_text.size() >= 2 && imm_text.at(0) == '0' && imm_text.at(1) == 'x') { // hex
             auto imm = stoi(imm_text, nullptr, 16);
             if (imm >= modulo) {
                 gte_modulo = true;
             }
             return {imm & modulo};
-        } else if (imm_text.at(0) == '0' && imm_text.at(1) == 'b') { // binary
+        } else if (imm_text.size() >= 2 && imm_text.at(0) == '0' && imm_text.at(1) == 'b') { // binary
             auto imm = stoi(imm_text, nullptr, 2);
             if (imm >= modulo) {
                 gte_modulo = true;
@@ -53,7 +53,7 @@ namespace parsing {
             if (imm >= modulo) {
                 gte_modulo = true;
             }
-            return {imm & modulo};
+            return {imm % modulo};
         }
         return nullopt;
     }
@@ -79,7 +79,7 @@ namespace parsing {
             };
             return nullopt;
         }
-        auto reg_index = parse_regindex(imm_text.substr(imm_text.find('(') + 1, imm_text.find(')') - 1));
+        auto reg_index = parse_regindex(imm_text.substr(imm_text.find('(') + 1, imm_text.find(')') - 2));
         if (!reg_index.has_value()) {
             error = {
                     "The instruction \""s + imm_text +
@@ -91,6 +91,216 @@ namespace parsing {
         return {make_tuple(imm.value(), reg_index.value())};
     }
 
+    void parse_i_type_parens(
+            Instruction32 &instruction,
+            vector<string> &words,
+            bool has_label,
+            Instruction32::ParsingException_t &error,
+            const string &instruction_text
+    ) {
+        auto reg_index =
+                parse_regindex(words.at(has_label + 1));
+        if (!reg_index.has_value()) {
+            error = {
+                    "The instruction \""s + instruction_text +
+                    "\" has an invalid register name: " + words.at(has_label + 1),
+                    false
+            };
+            return;
+        }
+        instruction.operands[0] = reg_index.value();
+        auto imm_with_offset =
+                parse_immediate_with_offset(words.at(has_label + 2), error);
+        if (!imm_with_offset.has_value()) {
+            error = {
+                    "The instruction \""s + instruction_text +
+                    "\" has an invalid immediate value: " + words.at(has_label + 2),
+                    false
+            };
+            return;
+        }
+        instruction.operands[1] = get<0>(imm_with_offset.value());
+        instruction.operands[2] = get<1>(imm_with_offset.value());
+    }
+
+    void parse_i_type_no_parens(
+            Instruction32 &instruction,
+            vector<string> &words,
+            bool has_label,
+            Instruction32::ParsingException_t &error,
+            const string &instruction_text
+    ) {
+        for (int i = 0; i < 2; ++i) {
+            auto reg_index =
+                    parse_regindex(words.at(has_label + i + 1));
+            if (!reg_index.has_value()) {
+                error = {
+                        "The instruction \"" + instruction_text +
+                        "\" has an invalid register name: " + words.at(has_label + i + 1),
+                        false
+                };
+                return;
+            }
+            instruction.operands[i] = reg_index.value();
+        }
+        bool greater_than_12_bits;
+        auto imm =
+                parse_immediate(words.at(has_label + 3), greater_than_12_bits);
+        if (!imm.has_value()) {
+            error = {
+                    "The instruction \"" + instruction_text +
+                    "\" has an invalid immediate value: " + words.at(has_label + 3),
+                    false
+            };
+            return;
+        }
+        if (greater_than_12_bits) {
+            error = {
+                    "The instruction \"" + instruction_text +
+                    "\" has an immediate value greater than 12 bits: " + words.at(has_label + 3),
+                    true
+            };
+        }
+        instruction.operands[2] = imm.value();
+    }
+
+    void parse_r_type(
+            Instruction32 &instruction,
+            vector<string> &words,
+            bool has_label,
+            Instruction32::ParsingException_t &error,
+            const string &instruction_text
+    ) {
+        for (int i = 0; i < 3; ++i) {
+            auto reg_index =
+                    parse_regindex(words.at(has_label + i + 1));
+            if (!reg_index.has_value()) {
+                error = {
+                        "The instruction \""s + instruction_text +
+                        "\" has an invalid register name: " + words.at(has_label + i + 1),
+                        false
+                };
+                return;
+            }
+            instruction.operands[i] = reg_index.value();
+        }
+    }
+
+    void parse_j_type(
+            Instruction32 &instruction,
+            vector<string> &words,
+            bool has_label,
+            Instruction32::ParsingException_t &error,
+            const string &instruction_text
+    ) {
+        auto reg_index =
+                parse_regindex(words.at(has_label + 1));
+        if (!reg_index.has_value()) {
+            error = {
+                    "The instruction \""s + instruction_text +
+                    "\" has an invalid register name: " + words.at(has_label + 1),
+                    false
+            };
+            return;
+        }
+        instruction.operands[0] = reg_index.value();
+        instruction.operands[1] = words.at(has_label + 2);
+    }
+
+    void parse_b_type(
+            Instruction32 &instruction,
+            vector<string> &words,
+            bool has_label,
+            Instruction32::ParsingException_t &error,
+            const string &instruction_text
+    ) {
+        for (int i = 0; i < 2; ++i) {
+            auto reg_index =
+                    parse_regindex(words.at(has_label + i + 1));
+            if (!reg_index.has_value()) {
+                error = {
+                        "The instruction \""s + instruction_text +
+                        "\" has an invalid register name: " + words.at(has_label + i + 1),
+                        false
+                };
+                return;
+            }
+            instruction.operands[i] = reg_index.value();
+        }
+        instruction.operands[2] = words.at(has_label + 3);
+    }
+
+    void parse_u_type(
+            Instruction32 &instruction,
+            vector<string> &words,
+            bool has_label,
+            Instruction32::ParsingException_t &error,
+            const string &instruction_text
+    ) {
+        auto reg_index =
+                parse_regindex(words.at(has_label + 1));
+        if (!reg_index.has_value()) {
+            error = {
+                    "The instruction \""s + instruction_text +
+                    "\" has an invalid register name: " + words.at(has_label + 1),
+                    false
+            };
+            return;
+        }
+        instruction.operands[0] = reg_index.value();
+        bool greater_than_20_bits;
+        auto imm =
+                parse_immediate(words.at(has_label + 2), greater_than_20_bits, 0x100000);
+        if (!imm.has_value()) {
+            error = {
+                    "The instruction \""s + instruction_text +
+                    "\" has an invalid immediate value: " + words.at(has_label + 2),
+                    false
+            };
+            return;
+        }
+        if (greater_than_20_bits) {
+            error = {
+                    "The instruction \""s + instruction_text +
+                    "\" has an immediate value greater than 20 bits: " + words.at(has_label + 2),
+                    true
+            };
+        }
+        instruction.operands[1] = imm.value();
+    }
+
+    void parse_s_type(
+            Instruction32 &instruction,
+            vector<string> &words,
+            bool has_label,
+            Instruction32::ParsingException_t &error,
+            const string &instruction_text
+    ) {
+        auto reg_index =
+                parse_regindex(words.at(has_label + 1));
+        if (!reg_index.has_value()) {
+            error = {
+                    "The instruction \""s + instruction_text +
+                    "\" has an invalid register name: " + words.at(has_label + 1),
+                    false
+            };
+            return;
+        }
+        instruction.operands[0] = reg_index.value();
+        auto imm_with_offset =
+                parse_immediate_with_offset(words.at(has_label + 2), error);
+        if (!imm_with_offset.has_value()) {
+            error = {
+                    "The instruction \""s + instruction_text +
+                    "\" has an invalid immediate value: " + words.at(has_label + 2),
+                    false
+            };
+            return;
+        }
+        instruction.operands[1] = get<0>(imm_with_offset.value());
+        instruction.operands[2] = get<1>(imm_with_offset.value());
+    }
+
     void parse_operands(
             Instruction32 &instruction,
             vector<string> &words,
@@ -100,140 +310,31 @@ namespace parsing {
     ) {
         switch (get_instruction_format(instruction.type)) {
             case R_TYPE: {
-                for (int i = 0; i < 3; ++i) {
-                    auto reg_index =
-                            parse_regindex(words.at(has_label + i + 1));
-                    if (!reg_index.has_value()) {
-                        error = {
-                                "The instruction \""s + instruction_text +
-                                "\" has an invalid register name: " + words.at(has_label + i + 1),
-                                false
-                        };
-                        return;
-                    }
-                    instruction.operands[i] = reg_index.value();
-                }
+                parse_r_type(instruction, words, has_label, error, instruction_text);
                 break;
             }
             case I_TYPE: {
-                for (int i = 0; i < 2; ++i) {
-                    auto reg_index =
-                            parse_regindex(words.at(has_label + i + 1));
-                    if (!reg_index.has_value()) {
-                        error = {
-                                "The instruction \""s + instruction_text +
-                                "\" has an invalid register name: " + words.at(has_label + i + 1),
-                                false
-                        };
-                        return;
-                    }
-                    instruction.operands[i] = reg_index.value();
+                if (words.at(has_label + 2).find('(') != string::npos) {
+                    parse_i_type_parens(instruction, words, has_label, error, instruction_text);
+                } else {
+                    parse_i_type_no_parens(instruction, words, has_label, error, instruction_text);
                 }
-                bool greater_than_12_bits;
-                auto imm =
-                        parse_immediate(words.at(has_label + 3), greater_than_12_bits);
-                if (!imm.has_value()) {
-                    error = {
-                            "The instruction \""s + instruction_text +
-                            "\" has an invalid immediate value: " + words.at(has_label + 3),
-                            false
-                    };
-                    return;
-                }
-                if (greater_than_12_bits) {
-                    error = {
-                            "The instruction \""s + instruction_text +
-                            "\" has an immediate value greater than 12 bits: " + words.at(has_label + 3),
-                            true
-                    };
-                }
-                instruction.operands[2] = imm.value();
                 break;
             }
             case S_TYPE: {
-                auto reg_index =
-                        parse_regindex(words.at(has_label + 1));
-                if (!reg_index.has_value()) {
-                    error = {
-                            "The instruction \""s + instruction_text +
-                            "\" has an invalid register name: " + words.at(has_label + 1),
-                            false
-                    };
-                    return;
-                }
-                instruction.operands[0] = reg_index.value();
-                auto imm_with_offset =
-                        parse_immediate_with_offset(words.at(has_label + 2), error);
-                if (!imm_with_offset.has_value()) {
-                    return;
-                }
-                instruction.operands[1] = get<0>(imm_with_offset.value());
-                instruction.operands[2] = get<1>(imm_with_offset.value());
+                parse_s_type(instruction, words, has_label, error, instruction_text);
                 break;
             }
             case B_TYPE: {
-                for (int i = 0; i < 2; ++i) {
-                    auto reg_index =
-                            parse_regindex(words.at(has_label + i + 1));
-                    if (!reg_index.has_value()) {
-                        error = {
-                                "The instruction \""s + instruction_text +
-                                "\" has an invalid register name: " + words.at(has_label + i + 1),
-                                false
-                        };
-                        return;
-                    }
-                    instruction.operands[i] = reg_index.value();
-                }
-                instruction.operands[2] = words.at(has_label + 3);
+                parse_b_type(instruction, words, has_label, error, instruction_text);
                 break;
             }
             case U_TYPE: {
-                auto reg_index =
-                        parse_regindex(words.at(has_label + 1));
-                if (!reg_index.has_value()) {
-                    error = {
-                            "The instruction \""s + instruction_text +
-                            "\" has an invalid register name: " + words.at(has_label + 1),
-                            false
-                    };
-                    return;
-                }
-                instruction.operands[0] = reg_index.value();
-                bool greater_than_20_bits;
-                auto imm =
-                        parse_immediate(words.at(has_label + 2), greater_than_20_bits, 0x100000);
-                if (!imm.has_value()) {
-                    error = {
-                            "The instruction \""s + instruction_text +
-                            "\" has an invalid immediate value: " + words.at(has_label + 2),
-                            false
-                    };
-                    return;
-                }
-                if (greater_than_20_bits) {
-                    error = {
-                            "The instruction \""s + instruction_text +
-                            "\" has an immediate value greater than 20 bits: " + words.at(has_label + 2),
-                            true
-                    };
-                }
-                instruction.operands[1] = imm.value();
+                parse_u_type(instruction, words, has_label, error, instruction_text);
                 break;
             }
             case J_TYPE: {
-                auto reg_index =
-                        parse_regindex(words.at(has_label + 1));
-                if (!reg_index.has_value()) {
-                    error = {
-                            "The instruction \""s + instruction_text +
-                            "\" has an invalid register name: " + words.at(has_label + 1),
-                            false
-                    };
-                    return;
-                }
-                instruction.operands[0] = reg_index.value();
-                instruction.operands[1] = words.at(has_label + 2);
+                parse_j_type(instruction, words, has_label, error, instruction_text);
                 break;
             }
         }
@@ -437,7 +538,7 @@ Instruction32::Instruction32(const string &instruction_text, ParsingException_t 
     error = {nullopt, false};
     string inst_text_clone = instruction_text;
     std::for_each(inst_text_clone.begin(), inst_text_clone.end(), [&](auto &item) {
-        if (item == '\t' || item == '\n') {
+        if (item == '\t' || item == '\n' || item == ',') {
             item = ' ';
         }
     });
@@ -461,13 +562,13 @@ Instruction32::Instruction32(const string &instruction_text, ParsingException_t 
             words.erase(words.begin() + i);
         }
         // remove a comma at the end of a word
-        if (words.at(i).at(words.at(i).size() - 1) == ',') {
-            words.at(i) = words.at(i).substr(0, words.at(i).size() - 1);
-        }
-        // remove a comma at the start of a word
-        if (words.at(i).at(0) == ',') {
-            words.at(i) = words.at(i).substr(1);
-        }
+//        if (words.size() >= 5 && words.at(i).at(words.at(i).size() - 1) == ',') {
+//            words.at(i) = words.at(i).substr(0, words.at(i).size() - 1);
+//        }
+//        // remove a comma at the start of a word
+//        if (words.at(i).at(0) == ',') {
+//            words.at(i) = words.at(i).substr(1);
+//        }
         if (word_empty) {
             i--;
         }

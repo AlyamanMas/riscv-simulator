@@ -16,7 +16,7 @@ string read_file(filesystem::path path) {
 
 int main() {
     auto project_dir = filesystem::path(__FILE__).parent_path().parent_path() / "asm-tests";
-    auto test_file = project_dir / "test.asm";
+    auto test_file = project_dir / "riscv1.asm";
 
     auto my_program = AssemblyProgram(read_file(test_file));
     return 0;
