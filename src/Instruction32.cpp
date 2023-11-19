@@ -242,45 +242,197 @@ namespace parsing {
 
 namespace exec_fns {
 #define EXEC_FN(name) void name (Instruction32 &instruction, function<void(RegIndex_t, RegValue_t)> &set_reg, function<RegValue_t(RegIndex_t)> &get_reg, Memory &memory, RegValue_t &pc)
-#define READ_REG_INDX(index) get_reg(get<RegIndex_t>(instruction.operands[index]))
+#define READ_REG_INDX(index) get<RegIndex_t>(instruction.operands[index])
+#define READ_REG(index) get_reg(READ_REG_INDX(index))
 #define READ_IMM(index) get<Instruction32::Immediate_t>(instruction.operands[index])
+#define RS1 READ_REG(1)
+#define RS2 READ_REG(2)
+#define RD_INDX READ_REG_INDX(0)
+#define RS1_INDX READ_REG_INDX(1)
+#define RS2_INDX READ_REG_INDX(2)
+#define IMM1 READ_IMM(1)
+#define IMM2 READ_IMM(2)
 
-    EXEC_FN(lui) {
-        set_reg(READ_REG_INDX(0), READ_IMM(1) << 12);
+    //TODO: Might have to deal with Endianness of x86
+
+    EXEC_FN(LUI) {
+        set_reg(RD_INDX, IMM1 << 12);
     }
 
-    EXEC_FN(auipc) {
-        set_reg(READ_REG_INDX(0), (READ_IMM(1) << 12) + pc);
+    EXEC_FN(AUIPC) {
+        set_reg(RD_INDX, (IMM1 << 12) + pc);
     }
 
-    EXEC_FN(jal) {
-        set_reg(READ_REG_INDX(0), pc + 4);
-        pc += READ_IMM(1);
+    EXEC_FN(JAL) {
+        set_reg(RD_INDX, pc + 4);
+        pc += (int32_t)IMM1;
     }
 
-    EXEC_FN(jalr) {
-        set_reg(READ_REG_INDX(0), pc + 4);
-        pc = (READ_IMM(1) + READ_REG_INDX(1)) & 0xFFFFFFFE;
+    EXEC_FN(JALR) {
+        set_reg(RD_INDX, pc + 4);
+        pc = ((int32_t)IMM1 + READ_REG(2)) & 0xFFFFFFFE;
     }
 
-    EXEC_FN(beq) {
-        if (READ_REG_INDX(0) == READ_REG_INDX(1)) {
-            pc += READ_IMM(2);
-        } else {
-            pc += 4;
+    EXEC_FN(BEQ) {
+        if (READ_REG(0) == READ_REG(1)) {
+            pc += (int32_t)IMM2;
         }
     }
 
-    // declare a static constant array of function pointers
-    // to the execution functions for each instruction
-    static const array<function<void(Instruction32 &, function<void(RegIndex_t, RegValue_t)>&, function<RegValue_t(RegIndex_t)>&, Memory &, RegValue_t &)>, 37>
-            exec_fns = {
-    };
+    EXEC_FN(BNE) {
+        if (READ_REG(0) != READ_REG(1)) {
+            pc += (int32_t)IMM2;
+        }
+    }
 
+    EXEC_FN(BLT) {
+        if ((int32_t)READ_REG(0) < (int32_t)READ_REG(1)) {
+            pc += (int32_t)IMM2;
+        }
+    }
+
+    EXEC_FN(BGE) {
+        if ((int32_t)READ_REG(0) >= (int32_t)READ_REG(1)) {
+            pc += (int32_t)IMM2;
+        }
+    }
+
+    EXEC_FN(BLTU) {
+        if (READ_REG(0) < READ_REG(1)) {
+            pc += (int32_t)IMM2;
+        }
+    }
+
+    EXEC_FN(BGEU) {
+        if (READ_REG(0) >= READ_REG(1)) {
+            pc += (int32_t)IMM2;
+        }
+    }
+
+    EXEC_FN(LB) {
+        set_reg(RD_INDX, (int32_t)memory.get_byte(READ_REG(1) + (int32_t)IMM1));
+    }
+
+    EXEC_FN(LH) {
+        set_reg(RD_INDX, (int32_t)memory.get_half_word(READ_REG(1) + (int32_t)IMM1));
+    }
+
+    EXEC_FN(LW) {
+        set_reg(RD_INDX, memory.get_word(READ_REG(1) + (int32_t)IMM1));
+    }
+
+    EXEC_FN(LBU) {
+        set_reg(RD_INDX, memory.get_byte(READ_REG(1) + (int32_t)IMM1));
+    }
+
+    EXEC_FN(LHU) {
+        set_reg(RD_INDX, memory.get_half_word(READ_REG(1) + (int32_t)IMM1));
+    }
+
+    EXEC_FN(SB) {
+        memory.set_byte(READ_REG(2) + (int32_t)IMM1, (uint8_t)READ_REG(0));
+    }
+
+    EXEC_FN(SH) {
+        memory.set_half_word(READ_REG(2) + (int32_t)IMM1, (uint16_t)READ_REG(0));
+    }
+
+    EXEC_FN(SW) {
+        memory.set_word(READ_REG(2) + (int32_t)IMM1, READ_REG(0));
+    }
+
+    EXEC_FN(ADDI) {
+        set_reg(RD_INDX, (int32_t)READ_REG(1) + (int32_t)IMM2);
+    }
+
+    EXEC_FN(SLTI) {
+        set_reg(RD_INDX, (int32_t)READ_REG(1) < (int32_t)IMM2);
+    }
+
+    EXEC_FN(SLTIU) {
+        set_reg(RD_INDX, READ_REG(1) < IMM2);
+    }
+
+    EXEC_FN(XORI) {
+        set_reg(RD_INDX, READ_REG(1) ^ IMM2);
+    }
+
+    EXEC_FN(ORI) {
+        set_reg(RD_INDX, READ_REG(1) | IMM2);
+    }
+
+    EXEC_FN(ANDI) {
+        set_reg(RD_INDX, READ_REG(1) & IMM2);
+    }
+
+    EXEC_FN(SLLI) {
+        set_reg(RD_INDX, READ_REG(1) << IMM2);
+    }
+
+    EXEC_FN(SRLI) {
+        set_reg(RD_INDX, READ_REG(1) >> IMM2);
+    }
+
+    EXEC_FN(SRAI) {
+        set_reg(RD_INDX, (int32_t)READ_REG(1) >> IMM2);
+    }
+
+    EXEC_FN(ADD) {
+        set_reg(RD_INDX, (int32_t)READ_REG(1) + (int32_t)READ_REG(2));
+    }
+
+    EXEC_FN(SUB) {
+        set_reg(RD_INDX, (int32_t)READ_REG(1) - (int32_t)READ_REG(2));
+    }
+
+    EXEC_FN(SLL) {
+        set_reg(RD_INDX, READ_REG(1) << (READ_REG(2) & 0x1F));
+    }
+
+    EXEC_FN(SLT) {
+        set_reg(RD_INDX, (int32_t)READ_REG(1) < (int32_t)READ_REG(2));
+    }
+
+    EXEC_FN(SLTU) {
+        set_reg(RD_INDX, READ_REG(1) < READ_REG(2));
+    }
+
+    EXEC_FN(XOR) {
+        set_reg(RD_INDX, READ_REG(1) ^ READ_REG(2));
+    }
+
+    EXEC_FN(SRL) {
+        set_reg(RD_INDX, READ_REG(1) >> (READ_REG(2) & 0x1F));
+    }
+
+    EXEC_FN(SRA) {
+        set_reg(RD_INDX, (int32_t)READ_REG(1) >> (READ_REG(2) & 0x1F));
+    }
+
+    EXEC_FN(OR) {
+        set_reg(RD_INDX, READ_REG(1) | READ_REG(2));
+    }
+
+    EXEC_FN(AND) {
+        set_reg(RD_INDX, READ_REG(1) & READ_REG(2));
+    }
+
+#undef EXEC_FN
+#undef READ_REG_INDX
+#undef READ_REG
+#undef READ_IMM
+#undef RS1
+#undef RS2
+#undef RD_INDX
+#undef RS1_INDX
+#undef RS2_INDX
+#undef IMM1
+#undef IMM2
 }
 
 Instruction32::Instruction32(const string &instruction_text, ParsingException_t &exception,
-                             optional<UnresolvedLabel_t> &unresolved_label) {
+                             optional<UnresolvedLabel_t> &unresolved_label)
+        : instruction_text(instruction_text) {
     // Replace any tab or new line with a space, makes parsing easier
     string inst_text_clone = instruction_text;
     std::for_each(inst_text_clone.begin(), inst_text_clone.end(), [&](auto &item) {
@@ -337,5 +489,14 @@ Instruction32::Instruction32(const string &instruction_text, ParsingException_t 
 
 void Instruction32::execute(function<void(RegIndex_t, RegValue_t)> &set_reg, function<RegValue_t(RegIndex_t)> &get_reg,
                             Memory &memory, RegValue_t &pc) {
-    exec_fns::exec_fns[this->type](*this, set_reg, get_reg, memory, pc);
+
+    // If we still have an unresolved label, we can't work with it
+    if (holds_alternative<UnresolvedLabel_t>(this->operands[2])) {
+        throw logic_error("The instruction \""s + this->instruction_text +
+                          "\" has an unresolved label: " + get<UnresolvedLabel_t>(this->operands[2]));
+    }
+
+    switch (this->type) {
+
+    }
 }

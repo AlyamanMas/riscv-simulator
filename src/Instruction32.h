@@ -18,7 +18,7 @@
 
 class Instruction32 {
 public:
-    typedef uint16_t Immediate_t;
+    typedef uint32_t Immediate_t;
     typedef std::string UnresolvedLabel_t;
     typedef std::variant<RegIndex_t, Immediate_t, UnresolvedLabel_t> Operand_t;
     typedef struct {
@@ -26,6 +26,7 @@ public:
         bool is_warning;
     } ParsingException_t;
 
+    const std::string instruction_text;
     RV32I_Instruction type;
     Operand_t operands[3];
 
