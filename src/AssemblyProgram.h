@@ -26,6 +26,9 @@ class AssemblyProgram {
     std::vector<InstructionWithAddress> instructions;
     std::map<Label_t, uint32_t> label_map;
     int top_instruction_address;
+    bool reached_end_of_program;
+
+    void resolve_labels();
 public:
     AssemblyProgram(std::string program_text, uint32_t starting_address = 0);
 

@@ -18,7 +18,7 @@
 
 class Instruction32 {
 public:
-    typedef uint32_t Immediate_t;
+    typedef int32_t Immediate_t;
     typedef std::string UnresolvedLabel_t;
     typedef std::variant<RegIndex_t, Immediate_t, UnresolvedLabel_t> Operand_t;
     typedef struct {

@@ -55,6 +55,25 @@ AssemblyProgram::AssemblyProgram(std::string program_text, uint32_t starting_add
             if (error.error.value().find("only has a label") == string::npos)
                 cerr << "Warning: " << error.error.value() << endl;
         }
+    }
 
+    resolve_labels();
+}
+
+void AssemblyProgram::resolve_labels() {
+    for (auto &instruction : instructions) {
+        for (auto &operand : instruction.instruction.operands) {
+            if (holds_alternative<Instruction32::UnresolvedLabel_t>(operand)) {
+                auto label = get<Instruction32::UnresolvedLabel_t>(operand);
+                if (label_map.find(label) == label_map.end()) {
+                    throw logic_error("Label " + label + " not found");
+                }
+                // calculate offset from this instruction's address to the label's address
+                int offset = ((int32_t)(label_map[label] - instruction.address)) / 2;
+                // convert offset to a signed 12-bit immediate
+                auto immediate = static_cast<Instruction32::Immediate_t>(offset);
+                operand = immediate;
+            }
+        }
     }
 }
