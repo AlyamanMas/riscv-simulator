@@ -419,15 +419,15 @@ namespace exec_fns {
     }
 
     EXEC_FN(LW) {
-        set_reg(RD_INDX, memory.get_word(READ_REG(1) + (int32_t) IMM1));
+        set_reg(RD_INDX, memory.get_word(READ_REG(2) + (int32_t) IMM1));
     }
 
     EXEC_FN(LBU) {
-        set_reg(RD_INDX, memory.get_byte(READ_REG(1) + (int32_t) IMM1));
+        set_reg(RD_INDX, memory.get_byte(READ_REG(2) + (int32_t) IMM1));
     }
 
     EXEC_FN(LHU) {
-        set_reg(RD_INDX, memory.get_half_word(READ_REG(1) + (int32_t) IMM1));
+        set_reg(RD_INDX, memory.get_half_word(READ_REG(2) + (int32_t) IMM1));
     }
 
     EXEC_FN(SB) {
