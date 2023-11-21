@@ -1,11 +1,7 @@
-.data
-	.c_var: .word 0x12345678, 2
-	
-.text 
 setup:
-	li	s0, 0xFFFF9796
-	li	s1, 0xABABCDCD
-	la	s2, .c_var
+	addi	s0, zero, 50
+	addi	s1, zero, 30
+	addi	s2, zero, 0
 main:
 	beq	s0, zero, .false
 	lw	s0, 0(s2)
@@ -15,6 +11,3 @@ main:
 	beq zero, zero, .return
 .return:
 	# Any exit code
-	li	a0, 0
-	li	a7, 93
-	ecall
